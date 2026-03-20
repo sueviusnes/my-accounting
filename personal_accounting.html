@@ -462,12 +462,38 @@ html, body {
   .deduct-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .deduct-item input { padding: 8px 10px; font-size: 0.88rem; }
 
-  /* settings — textarea code block */
-  #apps-script-code { font-size: 0.68rem !important; }
-  .fg input, .fg select { width: 100%; max-width: 100%; }
-
-  /* settings buttons — wrap */
-  .card div[style*="display:flex"] { flex-wrap: wrap; }
+  /* settings — fix overflow */
+  #apps-script-code {
+    font-size: 0.68rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+  }
+  /* URL input row — stack vertically */
+  #sheet-url-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .fg div[style*="display:flex"] {
+    flex-direction: column !important;
+  }
+  .fg div[style*="display:flex"] .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  /* tax calc — wrap long values */
+  .tax-calc-row { flex-wrap: wrap; gap: 4px; }
+  .tax-calc-row .val { word-break: break-all; }
+  /* settings sync buttons — 2 col grid */
+  #sync-options-btns {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  #sync-options-btns .btn { width: 100%; justify-content: center; }
 
   /* buttons */
   .btn { font-size: 0.85rem; padding: 10px 16px; }
@@ -884,7 +910,7 @@ function doGet(e) {
       <!-- Sync options -->
       <div style="background:var(--paper);border-radius:8px;padding:14px 16px;border:1px solid var(--line);">
         <div style="font-weight:700;color:var(--ink2);margin-bottom:10px;font-size:0.87rem;">ตัวเลือกการซิงก์</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div id="sync-options-btns" style="display:flex;gap:12px;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="syncToSheet()">☁️ อัปขึ้น Sheet</button>
           <button class="btn" style="background:var(--blue);color:white;" onclick="pullFromSheet()">📥 ดึงจาก Sheet</button>
           <button class="btn btn-ghost" onclick="exportBackup()">💾 Backup JSON</button>
