@@ -372,9 +372,100 @@ body {
   .tax-grid { grid-template-columns: 1fr; }
   .deduct-grid { grid-template-columns: 1fr; }
 }
+
 @media (max-width: 480px) {
-  .form-row.cols-2, .form-row.cols-3, .form-row.cols-4 { grid-template-columns: 1fr; }
-  .app-body { padding: 16px 12px; }
+  /* body */
+  body { font-size: 15px; }
+  .app-body { padding: 12px 10px 80px; }
+
+  /* header — compact single row */
+  .app-header {
+    padding: 0 12px;
+    height: 52px;
+    gap: 10px;
+  }
+  .logo { font-size: 0.9rem; padding: 3px 8px; }
+  .app-title { font-size: 0.88rem; }
+  .app-subtitle { display: none; }
+  #sync-status { display: none !important; }
+  #sync-btn {
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap;
+  }
+
+  /* tabs — full width equal split, no scroll */
+  .tabs {
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .tab-btn {
+    padding: 10px 4px;
+    font-size: 0.72rem;
+    text-align: center;
+  }
+
+  /* cards */
+  .card { padding: 16px 14px; border-radius: 10px; }
+  .card-title { font-size: 0.9rem; margin-bottom: 14px; }
+
+  /* stats grid — 2 col tighter */
+  .stats-row { gap: 8px; margin-bottom: 14px; }
+  .stat-box { padding: 12px 12px; border-radius: 9px; }
+  .stat-val { font-size: 1.2rem; }
+  .stat-label { font-size: 0.7rem; }
+  .stat-sub { font-size: 0.7rem; }
+
+  /* type toggle */
+  .type-toggle { margin-bottom: 0; }
+  .type-btn { font-size: 0.95rem; padding: 11px 0; }
+
+  /* form — single col */
+  .form-row.cols-2,
+  .form-row.cols-3,
+  .form-row.cols-4 { grid-template-columns: 1fr; gap: 10px; }
+  .fg label { font-size: 0.72rem; }
+  .fg input, .fg select, .fg textarea { padding: 11px 13px; font-size: 0.95rem; }
+
+  /* category chips — bigger tap targets */
+  .cat-chip { padding: 7px 14px; font-size: 0.82rem; }
+
+  /* ledger table — hide less important cols on mobile */
+  .ledger-table thead th:nth-child(5),
+  .ledger-table tbody td:nth-child(5) { display: none; } /* hide หมายเหตุ col */
+  .ledger-table thead th { font-size: 0.68rem; padding: 7px 8px; }
+  .ledger-table tbody td { padding: 9px 8px; font-size: 0.82rem; }
+
+  /* filter bar — wrap nicely */
+  .filter-bar { gap: 7px; }
+  .filter-bar input, .filter-bar select { font-size: 0.84rem; padding: 8px 10px; }
+
+  /* tax grid already 1 col */
+  .tax-calc-row { font-size: 0.85rem; padding: 10px 12px; }
+  .deduct-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .deduct-item input { padding: 8px 10px; font-size: 0.88rem; }
+
+  /* buttons */
+  .btn { font-size: 0.85rem; padding: 10px 16px; }
+  .btn-sm { font-size: 0.78rem; padding: 6px 12px; }
+
+  /* action bar — full width save button */
+  .action-bar-mobile {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .action-bar-mobile .btn-primary {
+    flex: 1;
+    justify-content: center;
+    font-size: 1rem;
+    padding: 13px 0;
+    border-radius: 10px;
+  }
+
+  /* install banner */
+  #install-bar { padding: 10px 14px; }
 }
 
 /* ── TOAST ── */
@@ -413,6 +504,7 @@ body {
       <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
       <span id="sync-text">พร้อมซิงก์</span>
     </div>
+    <button id="pull-btn" onclick="pullFromSheet()" style="display:none;" class="btn" style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.25);padding:7px 14px;font-size:0.83rem;">📥 ดึงจาก Sheet</button>
     <button id="sync-btn" onclick="syncToSheet()" style="display:none;" class="btn" style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.25);padding:7px 16px;font-size:0.83rem;">☁️ อัปขึ้น Sheet</button>
   </div>
 </div>
@@ -502,9 +594,9 @@ body {
         </div>
       </div>
 
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
-        <button class="btn btn-ghost" onclick="clearForm()">ล้างข้อมูล</button>
-        <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">💾 บันทึก</button>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;" class="action-bar-mobile">
+        <button class="btn btn-ghost" onclick="clearForm()">ล้าง</button>
+        <button class="btn btn-primary" id="save-btn" onclick="saveEntry()" style="flex:1;justify-content:center;">💾 บันทึก</button>
       </div>
     </div>
 
@@ -724,8 +816,35 @@ body {
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({status:'ok',message:'Personal Finance API ready'}))
-    .setMimeType(ContentService.MimeType.JSON);
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('รายการ');
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return ContentService.createTextOutput(JSON.stringify({status:'ok', entries:[]}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    var rows = sheet.getDataRange().getValues();
+    var entries = [];
+    for (var i = 1; i < rows.length; i++) {
+      if (!rows[i][0]) continue;
+      entries.push({
+        id: String(rows[i][0]),
+        date: String(rows[i][1]),
+        type: rows[i][2] === 'รายรับ' ? 'income' : 'expense',
+        category: String(rows[i][3]),
+        desc: String(rows[i][4]),
+        note: String(rows[i][5]),
+        payment: rows[i][6]==='เงินสด'?'cash':rows[i][6]==='โอนเงิน'?'transfer':'other',
+        amount: parseFloat(rows[i][7]) || 0,
+        createdAt: String(rows[i][8])
+      });
+    }
+    return ContentService.createTextOutput(JSON.stringify({status:'ok', entries:entries}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status:'error', message:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }</textarea>
       </div>
 
@@ -743,7 +862,8 @@ function doGet(e) {
       <div style="background:var(--paper);border-radius:8px;padding:14px 16px;border:1px solid var(--line);">
         <div style="font-weight:700;color:var(--ink2);margin-bottom:10px;font-size:0.87rem;">ตัวเลือกการซิงก์</div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="syncToSheet()">☁️ อัปรายการทั้งหมดขึ้น Sheet</button>
+          <button class="btn btn-primary" onclick="syncToSheet()">☁️ อัปขึ้น Sheet</button>
+          <button class="btn" style="background:var(--blue);color:white;" onclick="pullFromSheet()">📥 ดึงจาก Sheet</button>
           <button class="btn btn-ghost" onclick="exportBackup()">💾 Backup JSON</button>
           <label class="btn btn-ghost" style="cursor:pointer;">
             📂 นำเข้า Backup
@@ -1223,13 +1343,16 @@ function saveSheetUrl() {
 }
 function updateSyncUI() {
   const url = getSheetUrl();
-  const btn = document.getElementById('sync-btn');
+  const syncBtn = document.getElementById('sync-btn');
+  const pullBtn = document.getElementById('pull-btn');
   const status = document.getElementById('sync-status');
   if (url) {
-    btn.style.display = 'inline-flex';
+    syncBtn.style.display = 'inline-flex';
+    pullBtn.style.display = 'inline-flex';
     status.style.display = 'flex';
   } else {
-    btn.style.display = 'none';
+    syncBtn.style.display = 'none';
+    pullBtn.style.display = 'none';
     status.style.display = 'none';
   }
   const inp = document.getElementById('sheet-url-input');
@@ -1239,6 +1362,56 @@ function updateSyncUI() {
   if (info && lastSync) {
     const d = new Date(lastSync).toLocaleString('th-TH');
     info.textContent = `ซิงก์ล่าสุด: ${d}`;
+  }
+}
+async function pullFromSheet() {
+  const url = getSheetUrl();
+  if (!url) {
+    toast('⚠️ ยังไม่ได้ตั้งค่า URL — ไปที่แท็บ ⚙️ ตั้งค่า');
+    showTab('settings');
+    return;
+  }
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  const pullBtn = document.getElementById('pull-btn');
+  dot.style.background = '#facc15';
+  txt.textContent = 'กำลังดึง...';
+  pullBtn.disabled = true;
+  pullBtn.textContent = '⏳ กำลังดึง...';
+  try {
+    const res = await fetch(url + '?t=' + Date.now());
+    const json = await res.json();
+    if (json.status !== 'ok' || !Array.isArray(json.entries)) throw new Error(json.message || 'ข้อมูลไม่ถูกต้อง');
+    const localIds = new Set(entries.map(e => e.id));
+    let added = 0, updated = 0;
+    json.entries.forEach(remote => {
+      if (!remote.id) return;
+      const idx = entries.findIndex(e => e.id === remote.id);
+      if (idx >= 0) {
+        entries[idx] = { ...entries[idx], ...remote };
+        updated++;
+      } else {
+        entries.push(remote);
+        added++;
+      }
+    });
+    saveData();
+    renderTodayStats(); renderTodayEntries();
+    initHistoryFilter(); renderHistory();
+    localStorage.setItem('personal_acc_last_sync', new Date().toISOString());
+    updateSyncUI();
+    dot.style.background = '#4ade80';
+    txt.textContent = 'ดึงแล้ว';
+    toast(`📥 ดึงจาก Sheet สำเร็จ — เพิ่ม ${added} รายการ, อัปเดต ${updated} รายการ`, 3500);
+    setTimeout(() => { txt.textContent = 'ซิงก์แล้ว'; }, 4000);
+  } catch(e) {
+    dot.style.background = '#f87171';
+    txt.textContent = 'ดึงไม่สำเร็จ';
+    toast('❌ ดึงข้อมูลไม่สำเร็จ — ' + e.message, 4000);
+    setTimeout(() => { dot.style.background = '#4ade80'; txt.textContent = 'พร้อมซิงก์'; }, 5000);
+  } finally {
+    pullBtn.disabled = false;
+    pullBtn.innerHTML = '📥 ดึงจาก Sheet';
   }
 }
 async function testSheetUrl() {
