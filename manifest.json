@@ -2,7 +2,8 @@
   "name": "บัญชีส่วนตัว",
   "short_name": "บัญชีส่วนตัว",
   "description": "บัญชีรายรับ-รายจ่ายส่วนตัว ยื่นภาษี ภ.ง.ด.90/91",
-  "start_url": "./personal_accounting.html",
+  "start_url": "/my-accounting/personal_accounting.html",
+  "scope": "/my-accounting/",
   "display": "standalone",
   "background_color": "#0f1923",
   "theme_color": "#0f1923",
@@ -22,6 +23,5 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
   "categories": ["finance", "productivity"]
 }
