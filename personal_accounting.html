@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>บัญชีส่วนตัว</title>
+<!-- PWA -->
+<meta name="theme-color" content="#0f1923">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="บัญชีส่วนตัว">
+<meta name="description" content="บัญชีรายรับ-รายจ่ายส่วนตัว ยื่นภาษี ภ.ง.ด.90/91">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0f1923;
+  --ink2: #2d3f50;
+  --ink3: #5a7080;
+  --paper: #f5f0e8;
+  --paper2: #ede8de;
+  --paper3: #e0dbd0;
+  --line: #ccc6ba;
+  --green: #1a6640;
+  --green-bg: #e8f4ed;
+  --green-soft: #d0eadb;
+  --red: #961f2a;
+  --red-bg: #faeaea;
+  --red-soft: #f5d5d8;
+  --gold: #b5820a;
+  --gold-bg: #fdf5e0;
+  --blue: #1a4a7a;
+  --blue-bg: #e6eef8;
+  --accent: #c94a1a;
+  --shadow: 0 2px 12px rgba(15,25,35,0.10);
+  --shadow-lg: 0 8px 32px rgba(15,25,35,0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans Thai', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(180,170,150,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,170,150,0.06) 1px, transparent 1px);
+  background-size: 100% 28px, 28px 100%;
+}
+
+/* ── HEADER ── */
+.app-header {
+  background: var(--ink);
+  color: #f5f0e8;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+.logo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  font-size: 1.1rem;
+  background: var(--accent);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+.app-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0.9;
+}
+.app-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.45;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 1px;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 0;
+  background: var(--ink2);
+  padding: 0 28px;
+  overflow-x: auto;
+}
+.tab-btn {
+  padding: 11px 22px;
+  color: rgba(245,240,232,0.45);
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: 'Noto Sans Thai', sans-serif;
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2.5px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab-btn.active { color: #f5f0e8; border-bottom-color: var(--accent); }
+.tab-btn:hover:not(.active) { color: rgba(245,240,232,0.75); }
+
+/* ── BODY ── */
+.app-body { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── CARD ── */
+.card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  padding: 24px 26px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink2);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.01em;
+}
+.card-title .badge-label {
+  font-size: 0.72rem;
+  background: var(--paper2);
+  color: var(--ink3);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── DATE PICKER ROW ── */
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.date-row label { font-size: 0.83rem; font-weight: 600; color: var(--ink3); }
+.date-input {
+  padding: 8px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 7px;
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 0.92rem;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.date-input:focus { outline: none; border-color: var(--ink2); }
+
+/* ── FORM ELEMENTS ── */
+.form-row { display: grid; gap: 14px; margin-bottom: 14px; }
+.form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.form-row.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label { font-size: 0.78rem; font-weight: 700; color: var(--ink3); letter-spacing: 0.04em; text-transform: uppercase; }
+.fg input, .fg select, .fg textarea {
+  padding: 9px 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 7px;
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 0.93rem;
+  color: var(--ink);
+  background: white;
+  transition: border-color 0.15s;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus {
+  outline: none;
+  border-color: var(--ink2);
+  box-shadow: 0 0 0 3px rgba(45,63,80,0.08);
+}
+.fg textarea { resize: vertical; min-height: 64px; }
+.fg input[type="number"] { font-family: 'IBM Plex Mono', monospace; }
+
+/* amount input with color */
+.fg input.income-amt { border-color: #86c8a0; background: var(--green-bg); color: var(--green); font-weight: 600; }
+.fg input.income-amt:focus { border-color: var(--green); }
+.fg input.expense-amt { border-color: #e0a0a8; background: var(--red-bg); color: var(--red); font-weight: 600; }
+.fg input.expense-amt:focus { border-color: var(--red); }
+
+/* ── TYPE TOGGLE ── */
+.type-toggle { display: flex; gap: 0; border: 1.5px solid var(--line); border-radius: 8px; overflow: hidden; }
+.type-btn {
+  flex: 1;
+  padding: 9px 0;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: 'Noto Sans Thai', sans-serif;
+  cursor: pointer;
+  border: none;
+  background: white;
+  color: var(--ink3);
+  transition: all 0.15s;
+}
+.type-btn.income.active { background: var(--green); color: white; }
+.type-btn.expense.active { background: var(--red); color: white; }
+.type-btn:hover:not(.active) { background: var(--paper); }
+
+/* ── CATEGORY CHIPS ── */
+.cat-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.cat-chip {
+  padding: 5px 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  font-size: 0.80rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+  color: var(--ink3);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.cat-chip:hover { border-color: var(--ink3); color: var(--ink); }
+.cat-chip.selected.income { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+.cat-chip.selected.expense { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--ink); color: var(--paper); }
+.btn-primary:hover { background: var(--ink2); }
+.btn-green { background: var(--green); color: white; }
+.btn-green:hover { filter: brightness(1.1); }
+.btn-red { background: var(--red); color: white; }
+.btn-ghost { background: var(--paper2); color: var(--ink3); border: 1.5px solid var(--line); }
+.btn-ghost:hover { background: var(--paper3); color: var(--ink); }
+.btn-sm { padding: 5px 12px; font-size: 0.80rem; }
+.btn-gold { background: var(--gold); color: white; }
+
+/* ── STATS ROW ── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.stat-box {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: 0.74rem; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.stat-val { font-family: 'IBM Plex Mono', monospace; font-size: 1.4rem; font-weight: 600; color: var(--ink); }
+.stat-val.green { color: var(--green); }
+.stat-val.red { color: var(--red); }
+.stat-val.gold { color: var(--gold); }
+.stat-sub { font-size: 0.74rem; color: var(--ink3); margin-top: 3px; font-family: 'IBM Plex Mono', monospace; }
+
+/* ── LEDGER TABLE ── */
+.ledger-wrap { overflow-x: auto; }
+.ledger-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+.ledger-table thead th {
+  padding: 9px 14px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  border-bottom: 2px solid var(--line);
+  background: var(--paper);
+  white-space: nowrap;
+}
+.ledger-table tbody tr {
+  border-bottom: 1px solid var(--paper2);
+  transition: background 0.1s;
+}
+.ledger-table tbody tr:hover { background: var(--paper); }
+.ledger-table tbody td { padding: 10px 14px; vertical-align: middle; }
+.ledger-table .mono { font-family: 'IBM Plex Mono', monospace; }
+.ledger-table .amt-income { color: var(--green); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+.ledger-table .amt-expense { color: var(--red); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+.ledger-table .balance-pos { color: var(--green); font-family: 'IBM Plex Mono', monospace; font-weight: 700; }
+.ledger-table .balance-neg { color: var(--red); font-family: 'IBM Plex Mono', monospace; font-weight: 700; }
+
+/* cat badge */
+.cat-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cat-badge.income { background: var(--green-soft); color: var(--green); }
+.cat-badge.expense { background: var(--red-soft); color: var(--red); }
+
+/* type indicator */
+.type-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.type-dot.income { background: var(--green); }
+.type-dot.expense { background: var(--red); }
+
+/* empty state */
+.empty { text-align: center; padding: 48px 20px; color: var(--ink3); }
+.empty-icon { font-size: 2.5rem; opacity: 0.3; margin-bottom: 10px; }
+
+/* ── TAX SUMMARY ── */
+.tax-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.tax-month-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+.tax-month-table th { padding: 8px 14px; text-align: left; font-weight: 700; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink3); border-bottom: 2px solid var(--line); }
+.tax-month-table td { padding: 8px 14px; border-bottom: 1px solid var(--paper2); }
+.tax-month-table tfoot td { font-weight: 700; border-top: 2px solid var(--line); background: var(--paper); }
+.tax-calc-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--paper2); font-size: 0.91rem; }
+.tax-calc-row:last-child { border-bottom: none; }
+.tax-calc-row.total { background: var(--ink); color: white; border-radius: 8px; margin-top: 4px; padding: 14px 16px; }
+.tax-calc-row .val { font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+.tax-calc-row.income-row .val { color: var(--green); }
+.tax-calc-row.expense-row .val { color: var(--red); }
+.tax-calc-row.profit-row { background: var(--paper); font-weight: 700; }
+.tax-calc-row.deduct-row .val { color: var(--gold); }
+.tax-calc-row.total .val { color: #f5c860; font-size: 1.1rem; }
+
+.bracket-tag { display: inline-block; font-size: 0.74rem; font-family: 'IBM Plex Mono', monospace; background: var(--paper2); color: var(--ink3); border-radius: 4px; padding: 2px 7px; margin-left: 8px; }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+.filter-bar input, .filter-bar select {
+  padding: 8px 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 7px;
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 0.87rem;
+  background: white;
+  color: var(--ink);
+}
+.filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--ink2); }
+
+/* ── YEAR / MONTH TABS ── */
+.period-select { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+
+/* ── DEDUCT INPUT ── */
+.deduct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.deduct-item { display: flex; flex-direction: column; gap: 4px; }
+.deduct-item label { font-size: 0.76rem; font-weight: 700; color: var(--ink3); letter-spacing: 0.04em; text-transform: uppercase; }
+.deduct-item input { padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 0.92rem; text-align: right; }
+.deduct-item input:focus { outline: none; border-color: var(--gold); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .form-row.cols-3, .form-row.cols-4 { grid-template-columns: 1fr 1fr; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .tax-grid { grid-template-columns: 1fr; }
+  .deduct-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .form-row.cols-2, .form-row.cols-3, .form-row.cols-4 { grid-template-columns: 1fr; }
+  .app-body { padding: 16px 12px; }
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 11px 24px;
+  border-radius: 24px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  z-index: 9999;
+  transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: var(--shadow-lg);
+  white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="logo">MY</div>
+  <div>
+    <div class="app-title">บัญชีส่วนตัว</div>
+    <div class="app-subtitle">PERSONAL FINANCE · ยื่นภาษี ภ.ง.ด.90/91</div>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+    <div id="sync-status" style="display:none;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 12px;font-size:0.78rem;color:rgba(245,240,232,0.8);">
+      <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+      <span id="sync-text">พร้อมซิงก์</span>
+    </div>
+    <button id="sync-btn" onclick="syncToSheet()" style="display:none;" class="btn" style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.25);padding:7px 16px;font-size:0.83rem;">☁️ อัปขึ้น Sheet</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('ledger')">📒 บันทึกรายวัน</button>
+  <button class="tab-btn" onclick="showTab('history')">📋 ประวัติรายการ</button>
+  <button class="tab-btn" onclick="showTab('tax')">🧾 สรุปยื่นภาษี</button>
+  <button class="tab-btn" onclick="showTab('settings')">⚙️ ตั้งค่า</button>
+</div>
+
+<div class="app-body">
+
+  <!-- ════ TAB: LEDGER ════ -->
+  <div id="tab-ledger" class="tab-pane active">
+
+    <!-- Quick stats -->
+    <div class="stats-row" id="today-stats">
+      <div class="stat-box">
+        <div class="stat-label">วันนี้ — รายรับ</div>
+        <div class="stat-val green" id="st-income-today">0</div>
+        <div class="stat-sub">บาท</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">วันนี้ — รายจ่าย</div>
+        <div class="stat-val red" id="st-expense-today">0</div>
+        <div class="stat-sub">บาท</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">วันนี้ — คงเหลือ</div>
+        <div class="stat-val" id="st-net-today">0</div>
+        <div class="stat-sub">บาท</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">รายการวันนี้</div>
+        <div class="stat-val" id="st-count-today">0</div>
+        <div class="stat-sub">รายการ</div>
+      </div>
+    </div>
+
+    <!-- Entry form -->
+    <div class="card">
+      <div class="card-title">✏️ บันทึกรายการใหม่</div>
+
+      <!-- Type toggle -->
+      <div style="margin-bottom:18px;">
+        <div class="type-toggle">
+          <button class="type-btn income active" id="type-income-btn" onclick="setType('income')">📥 รายรับ</button>
+          <button class="type-btn expense" id="type-expense-btn" onclick="setType('expense')">📤 รายจ่าย</button>
+        </div>
+      </div>
+
+      <div class="form-row cols-3">
+        <div class="fg">
+          <label>วันที่</label>
+          <input type="date" id="entry-date" class="date-input">
+        </div>
+        <div class="fg">
+          <label>จำนวนเงิน (บาท)</label>
+          <input type="number" id="entry-amount" class="income-amt" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="fg">
+          <label>ประเภทการชำระ</label>
+          <select id="entry-payment">
+            <option value="cash">💵 เงินสด</option>
+            <option value="transfer">📲 โอนเงิน</option>
+            <option value="other">อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="fg" style="margin-bottom:16px;">
+        <label>หมวดหมู่</label>
+        <div class="cat-chips" id="cat-chips"></div>
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="fg">
+          <label>รายละเอียด / หัวข้อ</label>
+          <input type="text" id="entry-desc" placeholder="เช่น ค่าตรวจสภาพรถ กข-1234">
+        </div>
+        <div class="fg">
+          <label>หมายเหตุ (ถ้ามี)</label>
+          <input type="text" id="entry-note" placeholder="หมายเหตุเพิ่มเติม">
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
+        <button class="btn btn-ghost" onclick="clearForm()">ล้างข้อมูล</button>
+        <button class="btn btn-primary" id="save-btn" onclick="saveEntry()">💾 บันทึก</button>
+      </div>
+    </div>
+
+    <!-- Today's entries -->
+    <div class="card">
+      <div class="card-title">📒 รายการวันนี้ <span class="badge-label" id="today-date-label"></span></div>
+      <div class="ledger-wrap">
+        <div id="today-entries"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: HISTORY ════ -->
+  <div id="tab-history" class="tab-pane">
+
+    <!-- Month stats -->
+    <div class="stats-row" id="month-stats">
+      <div class="stat-box">
+        <div class="stat-label" id="lbl-income-month">รายรับ</div>
+        <div class="stat-val green" id="st-income-month">0</div>
+        <div class="stat-sub">บาท</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="lbl-expense-month">รายจ่าย</div>
+        <div class="stat-val red" id="st-expense-month">0</div>
+        <div class="stat-sub">บาท</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="lbl-profit-month">คงเหลือ</div>
+        <div class="stat-val gold" id="st-profit-month">0</div>
+        <div class="stat-sub">บาท</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">จำนวนรายการ</div>
+        <div class="stat-val" id="st-count-month">0</div>
+        <div class="stat-sub">รายการ</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 ประวัติรายการทั้งหมด</div>
+      <div class="filter-bar">
+        <select id="filter-month" onchange="renderHistory()" style="font-family:'Noto Sans Thai',sans-serif;padding:8px 13px;border:1.5px solid var(--line);border-radius:7px;font-size:0.87rem;background:white;color:var(--ink);">
+          <option value="">📅 ทุกช่วงเวลา</option>
+        </select>
+        <select id="filter-type" onchange="renderHistory()">
+          <option value="">ทุกประเภท</option>
+          <option value="income">📥 รายรับ</option>
+          <option value="expense">📤 รายจ่าย</option>
+        </select>
+        <select id="filter-cat" onchange="renderHistory()">
+          <option value="">ทุกหมวดหมู่</option>
+        </select>
+        <input type="text" id="filter-search" placeholder="🔍 ค้นหา..." oninput="renderHistory()" style="flex:1;min-width:160px;">
+        <button class="btn btn-ghost btn-sm" onclick="clearHistoryFilter()">✕ ล้าง</button>
+      </div>
+      <div class="ledger-wrap" id="history-table"></div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: TAX ════ -->
+  <div id="tab-tax" class="tab-pane">
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">🧾 สรุปเพื่อยื่นภาษีเงินได้บุคคลธรรมดา (ภ.ง.ด.90)</div>
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:0;">
+        <div class="fg" style="margin:0;">
+          <label>ปีภาษี (พ.ศ.)</label>
+          <select id="tax-year" onchange="renderTax()" style="padding:9px 14px;border:1.5px solid var(--line);border-radius:7px;font-family:'Noto Sans Thai',sans-serif;font-size:0.93rem;background:white;"></select>
+        </div>
+        <div style="font-size:0.8rem;color:var(--ink3);padding-bottom:10px;">
+          รายได้บุคคลธรรมดา — ยื่นแบบ <b>ภ.ง.ด.90 / ภ.ง.ด.91</b> ตามประเภทเงินได้
+        </div>
+      </div>
+    </div>
+
+    <div class="tax-grid">
+      <!-- Left: monthly summary -->
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title">📅 รายได้-รายจ่าย รายเดือน</div>
+        <table class="tax-month-table" id="tax-month-table">
+          <thead><tr>
+            <th>เดือน</th>
+            <th style="text-align:right;color:var(--green)">รายรับ</th>
+            <th style="text-align:right;color:var(--red)">รายจ่าย</th>
+            <th style="text-align:right;">กำไร</th>
+          </tr></thead>
+          <tbody id="tax-month-body"></tbody>
+          <tfoot id="tax-month-foot"></tfoot>
+        </table>
+      </div>
+
+      <!-- Right: tax calculation -->
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">📐 คำนวณภาษีเบื้องต้น</div>
+          <div id="tax-calc-rows"></div>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">🧾 ค่าลดหย่อน <span class="badge-label">กรอกเพิ่มเติม</span></div>
+          <div class="deduct-grid" id="deduct-grid">
+            <div class="deduct-item">
+              <label>ลดหย่อนส่วนตัว</label>
+              <input type="number" id="ded-self" value="60000" oninput="renderTax()">
+            </div>
+            <div class="deduct-item">
+              <label>คู่สมรส</label>
+              <input type="number" id="ded-spouse" value="0" oninput="renderTax()">
+            </div>
+            <div class="deduct-item">
+              <label>บุตร (× 30,000)</label>
+              <input type="number" id="ded-child" value="0" oninput="renderTax()">
+            </div>
+            <div class="deduct-item">
+              <label>ประกันสังคม</label>
+              <input type="number" id="ded-ssf" value="0" oninput="renderTax()">
+            </div>
+            <div class="deduct-item">
+              <label>เบี้ยประกันชีวิต</label>
+              <input type="number" id="ded-ins" value="0" oninput="renderTax()">
+            </div>
+            <div class="deduct-item">
+              <label>RMF / กบข. / อื่นๆ</label>
+              <input type="number" id="ded-rmf" value="0" oninput="renderTax()">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn btn-gold btn-sm" onclick="saveDedSettings()">💾 บันทึกค่าลดหย่อน</button>
+            <button class="btn btn-ghost btn-sm" onclick="printTax()">🖨️ พิมพ์ PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cat breakdown for tax year -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-title">📊 สรุปค่าใช้จ่ายตามหมวดหมู่ (ทั้งปี)</div>
+      <div id="tax-cat-breakdown"></div>
+    </div>
+
+    <!-- Warning -->
+    <div style="margin-top:16px;padding:14px 18px;background:var(--gold-bg);border:1.5px solid #e0b840;border-radius:9px;font-size:0.83rem;color:#7a5a00;line-height:2;">
+      ⚠️ <b>หมายเหตุ:</b> ตัวเลขนี้เป็นการประมาณการเบื้องต้น ควรปรึกษานักบัญชีหรือสรรพากรก่อนยื่นแบบจริง &nbsp;|&nbsp;
+      กำหนดยื่น ภ.ง.ด.90/91 ภายใน <b>31 มีนาคม</b> ของปีถัดไป (ยื่นออนไลน์ขยายถึง <b>8 เมษายน</b>)
+    </div>
+  </div>
+
+  <!-- ════ TAB: SETTINGS ════ -->
+  <div id="tab-settings" class="tab-pane">
+
+    <div class="card">
+      <div class="card-title">☁️ เชื่อมต่อ Google Sheets</div>
+
+      <!-- Setup instructions -->
+      <div style="background:var(--blue-bg);border:1.5px solid #a0bcd8;border-radius:9px;padding:16px 20px;margin-bottom:20px;">
+        <div style="font-weight:700;color:var(--blue);margin-bottom:10px;font-size:0.92rem;">📋 วิธีตั้งค่า (ทำครั้งเดียว)</div>
+        <div style="background:var(--gold-bg);border:1px solid #e0c040;border-radius:7px;padding:9px 14px;margin-bottom:12px;font-size:0.82rem;color:#7a5a00;">
+          ⚠️ ทุกครั้งที่แก้ไขโค้ด Apps Script ต้อง <b>Deploy ใหม่</b> เสมอ (New deployment)
+        </div>
+        <ol style="font-size:0.87rem;color:var(--ink2);line-height:2.2;padding-left:18px;">
+          <li>ไปที่ <a href="https://sheets.google.com" target="_blank" style="color:var(--blue);font-weight:600;">sheets.google.com</a> → สร้าง Spreadsheet ใหม่ ตั้งชื่อ <b>"บัญชีส่วนตัว"</b></li>
+          <li>เมนู <b>Extensions → Apps Script</b> → ลบโค้ดเดิมออกทั้งหมด → วางโค้ดด้านล่าง → Save (Ctrl+S)</li>
+          <li><b>Deploy → New deployment → Web app</b><br>
+            &nbsp;&nbsp;• Execute as: <b>Me</b><br>
+            &nbsp;&nbsp;• Who has access: <b>Anyone</b><br>
+            &nbsp;&nbsp;→ กด <b>Deploy</b> → อนุญาต Permission</li>
+          <li>คัดลอก <b>Web App URL</b> ที่ได้ → วางในช่องด้านล่าง → กด <b>บันทึก</b></li>
+        </ol>
+      </div>
+
+      <!-- Apps Script code -->
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:0.83rem;font-weight:700;color:var(--ink2);">โค้ด Apps Script (คัดลอกทั้งหมด)</div>
+          <button class="btn btn-ghost btn-sm" onclick="copyScript()">📋 คัดลอก</button>
+        </div>
+        <textarea id="apps-script-code" readonly rows="10"
+          style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;background:#0f1923;color:#86efac;border:none;border-radius:8px;padding:14px;resize:none;line-height:1.7;letter-spacing:0.01em;">function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var data = JSON.parse(e.postData.contents);
+
+    if (data.action === 'sync') {
+      var sheet = ss.getSheetByName('รายการ') || ss.insertSheet('รายการ');
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(['ID','วันที่','ประเภท','หมวดหมู่','รายละเอียด','หมายเหตุ','ชำระ','จำนวน (บาท)','บันทึกเมื่อ']);
+        sheet.getRange(1,1,1,9).setFontWeight('bold').setBackground('#0f1923').setFontColor('#f5f0e8');
+      }
+      var existingIds = {};
+      var rows = sheet.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) existingIds[rows[i][0]] = i + 1;
+
+      var added = 0, updated = 0;
+      data.entries.forEach(function(entry) {
+        var row = [entry.id, entry.date, entry.type==='income'?'รายรับ':'รายจ่าย',
+          entry.category, entry.desc||'', entry.note||'',
+          entry.payment==='cash'?'เงินสด':entry.payment==='transfer'?'โอนเงิน':'อื่นๆ',
+          entry.amount, entry.createdAt||''];
+        if (existingIds[entry.id]) {
+          sheet.getRange(existingIds[entry.id], 1, 1, 9).setValues([row]);
+          updated++;
+        } else {
+          sheet.appendRow(row);
+          added++;
+        }
+      });
+      return ContentService.createTextOutput(JSON.stringify({status:'ok',added:added,updated:updated}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput(JSON.stringify({status:'error',message:'unknown action'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status:'error',message:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({status:'ok',message:'Personal Finance API ready'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</textarea>
+      </div>
+
+      <!-- URL input -->
+      <div class="fg" style="margin-bottom:16px;">
+        <label>Web App URL</label>
+        <div style="display:flex;gap:10px;">
+          <input type="text" id="sheet-url-input" placeholder="https://script.google.com/macros/s/..." style="flex:1;">
+          <button class="btn btn-primary" onclick="saveSheetUrl()">💾 บันทึก</button>
+          <button class="btn btn-ghost" onclick="testSheetUrl()">🔗 ทดสอบ</button>
+        </div>
+      </div>
+
+      <!-- Sync options -->
+      <div style="background:var(--paper);border-radius:8px;padding:14px 16px;border:1px solid var(--line);">
+        <div style="font-weight:700;color:var(--ink2);margin-bottom:10px;font-size:0.87rem;">ตัวเลือกการซิงก์</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="syncToSheet()">☁️ อัปรายการทั้งหมดขึ้น Sheet</button>
+          <button class="btn btn-ghost" onclick="exportBackup()">💾 Backup JSON</button>
+          <label class="btn btn-ghost" style="cursor:pointer;">
+            📂 นำเข้า Backup
+            <input type="file" accept=".json" onchange="importBackup(this)" style="display:none;">
+          </label>
+        </div>
+        <div id="last-sync-info" style="margin-top:10px;font-size:0.8rem;color:var(--ink3);font-family:'IBM Plex Mono',monospace;"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- end app-body -->
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  DATA & CONSTANTS
+// ══════════════════════════════════════════
+const INCOME_CATS = ['เงินเดือน','รายได้เสริม','ค่าจ้างงาน','ขายของ','เงินปันผล/ดอกเบี้ย','โบนัส','รายได้อื่นๆ'];
+const EXPENSE_CATS = ['อาหาร/เครื่องดื่ม','เดินทาง/น้ำมัน','ที่พัก/ค่าเช่า','ค่าไฟ/น้ำ/อินเทอร์เน็ต','สุขภาพ/ยา','เสื้อผ้า/ของใช้','บันเทิง/ท่องเที่ยว','ประกัน','ผ่อนชำระ/หนี้','ครอบครัว/พ่อแม่','ช้อปปิ้ง','ออม/ลงทุน','ค่าใช้จ่ายอื่นๆ'];
+const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+let entries = [];
+let currentType = 'income';
+let selectedCat = '';
+let editingId = null;
+
+function loadData() {
+  try { entries = JSON.parse(localStorage.getItem('personal_acc_entries') || '[]'); } catch(e) { entries = []; }
+  try {
+    const d = JSON.parse(localStorage.getItem('personal_acc_ded') || '{}');
+    if (d.self) document.getElementById('ded-self').value = d.self;
+    if (d.spouse !== undefined) document.getElementById('ded-spouse').value = d.spouse;
+    if (d.child !== undefined) document.getElementById('ded-child').value = d.child;
+    if (d.ssf !== undefined) document.getElementById('ded-ssf').value = d.ssf;
+    if (d.ins !== undefined) document.getElementById('ded-ins').value = d.ins;
+    if (d.rmf !== undefined) document.getElementById('ded-rmf').value = d.rmf;
+  } catch(e) {}
+}
+function saveData() {
+  localStorage.setItem('personal_acc_entries', JSON.stringify(entries));
+}
+function saveDedSettings() {
+  const d = {
+    self: document.getElementById('ded-self').value,
+    spouse: document.getElementById('ded-spouse').value,
+    child: document.getElementById('ded-child').value,
+    ssf: document.getElementById('ded-ssf').value,
+    ins: document.getElementById('ded-ins').value,
+    rmf: document.getElementById('ded-rmf').value,
+  };
+  localStorage.setItem('personal_acc_ded', JSON.stringify(d));
+  toast('💾 บันทึกค่าลดหย่อนแล้ว');
+}
+
+const fmtN = n => Number(n).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const fmtI = n => Number(n).toLocaleString('th-TH');
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+function toast(msg, dur=2400) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+// ══════════════════════════════════════════
+//  TAB SWITCHING
+// ══════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  const idx = ['ledger','history','tax','settings'].indexOf(id);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  if (id === 'ledger') { renderTodayStats(); renderTodayEntries(); }
+  if (id === 'history') { initHistoryFilter(); renderHistory(); renderMonthStats(); }
+  if (id === 'tax') { initTaxYear(); renderTax(); }
+  if (id === 'settings') { updateSyncUI(); }
+}
+
+// ══════════════════════════════════════════
+//  FORM
+// ══════════════════════════════════════════
+function setType(t) {
+  currentType = t;
+  selectedCat = '';
+  document.getElementById('type-income-btn').classList.toggle('active', t === 'income');
+  document.getElementById('type-expense-btn').classList.toggle('active', t === 'expense');
+  const amtInp = document.getElementById('entry-amount');
+  amtInp.className = t === 'income' ? 'income-amt' : 'expense-amt';
+  renderCatChips();
+}
+function renderCatChips() {
+  const cats = currentType === 'income' ? INCOME_CATS : EXPENSE_CATS;
+  const wrap = document.getElementById('cat-chips');
+  wrap.innerHTML = cats.map(c => `
+    <div class="cat-chip ${selectedCat===c?'selected '+currentType:''}" onclick="selectCat('${c}')">${c}</div>
+  `).join('');
+}
+function selectCat(c) {
+  selectedCat = selectedCat === c ? '' : c;
+  renderCatChips();
+}
+function clearForm() {
+  document.getElementById('entry-amount').value = '';
+  document.getElementById('entry-desc').value = '';
+  document.getElementById('entry-note').value = '';
+  document.getElementById('entry-payment').value = 'cash';
+  selectedCat = '';
+  editingId = null;
+  document.getElementById('save-btn').textContent = '💾 บันทึก';
+  setType('income');
+}
+function saveEntry() {
+  const dateVal = document.getElementById('entry-date').value;
+  const amount = parseFloat(document.getElementById('entry-amount').value);
+  if (!dateVal) { toast('⚠️ กรุณาเลือกวันที่'); return; }
+  if (!amount || amount <= 0) { toast('⚠️ กรุณากรอกจำนวนเงิน'); return; }
+  if (!selectedCat) { toast('⚠️ กรุณาเลือกหมวดหมู่'); return; }
+  const entry = {
+    id: editingId || genId(),
+    date: dateVal,
+    type: currentType,
+    amount: amount,
+    category: selectedCat,
+    payment: document.getElementById('entry-payment').value,
+    desc: document.getElementById('entry-desc').value.trim(),
+    note: document.getElementById('entry-note').value.trim(),
+    createdAt: editingId ? undefined : new Date().toISOString(),
+  };
+  if (editingId) {
+    const idx = entries.findIndex(e => e.id === editingId);
+    if (idx >= 0) { entry.createdAt = entries[idx].createdAt; entries[idx] = entry; }
+  } else {
+    entries.unshift(entry);
+  }
+  saveData();
+  clearForm();
+  renderTodayStats();
+  renderTodayEntries();
+  toast(editingId ? '✏️ แก้ไขรายการแล้ว' : (currentType === 'income' ? '✅ บันทึกรายรับแล้ว' : '✅ บันทึกรายจ่ายแล้ว'));
+  editingId = null;
+}
+function editEntry(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  editingId = id;
+  document.getElementById('entry-date').value = e.date;
+  document.getElementById('entry-amount').value = e.amount;
+  document.getElementById('entry-payment').value = e.payment;
+  document.getElementById('entry-desc').value = e.desc;
+  document.getElementById('entry-note').value = e.note;
+  setType(e.type);
+  selectedCat = e.category;
+  renderCatChips();
+  document.getElementById('save-btn').textContent = '💾 อัปเดต';
+  showTab('ledger');
+  document.getElementById('entry-amount').focus();
+}
+function deleteEntry(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  entries = entries.filter(e => e.id !== id);
+  saveData();
+  renderTodayStats();
+  renderTodayEntries();
+  renderHistory();
+  renderMonthStats();
+  toast('🗑️ ลบรายการแล้ว');
+}
+
+// ══════════════════════════════════════════
+//  TODAY STATS & TABLE
+// ══════════════════════════════════════════
+function renderTodayStats() {
+  const today = document.getElementById('entry-date').value;
+  const todayE = entries.filter(e => e.date === today);
+  const income = todayE.filter(e => e.type === 'income').reduce((s,e)=>s+e.amount,0);
+  const expense = todayE.filter(e => e.type === 'expense').reduce((s,e)=>s+e.amount,0);
+  const net = income - expense;
+  document.getElementById('st-income-today').textContent = fmtI(income);
+  document.getElementById('st-expense-today').textContent = fmtI(expense);
+  const netEl = document.getElementById('st-net-today');
+  netEl.textContent = fmtI(net);
+  netEl.className = 'stat-val ' + (net >= 0 ? 'green' : 'red');
+  document.getElementById('st-count-today').textContent = todayE.length;
+  const d = new Date(today + 'T00:00:00');
+  document.getElementById('today-date-label').textContent = d.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+function renderTodayEntries() {
+  const today = document.getElementById('entry-date').value;
+  const todayE = entries.filter(e => e.date === today).sort((a,b)=>b.createdAt?.localeCompare(a.createdAt||''));
+  const wrap = document.getElementById('today-entries');
+  if (todayE.length === 0) {
+    wrap.innerHTML = `<div class="empty"><div class="empty-icon">📒</div><div>ยังไม่มีรายการวันนี้<br><small>กรอกข้อมูลด้านบนแล้วกด "บันทึก"</small></div></div>`;
+    return;
+  }
+  wrap.innerHTML = renderEntryTable(todayE);
+}
+
+// ══════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════
+function initHistoryFilter() {
+  // Build month options from actual data
+  const months = [...new Set(entries.map(e => e.date.slice(0,7)))].sort((a,b)=>b.localeCompare(a));
+  const sel = document.getElementById('filter-month');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">📅 ทุกช่วงเวลา</option>' + months.map(m => {
+    const [y, mo] = m.split('-');
+    const label = `${MONTHS[parseInt(mo)-1]} ${parseInt(y)+543}`;
+    return `<option value="${m}">${label}</option>`;
+  }).join('');
+  // Restore selection if still valid, else default to all
+  if (cur && months.includes(cur)) sel.value = cur;
+  // Build category filter
+  const allCats = [...new Set(entries.map(e => e.category))].sort();
+  const catSel = document.getElementById('filter-cat');
+  const curCat = catSel.value;
+  catSel.innerHTML = '<option value="">ทุกหมวดหมู่</option>' + allCats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if (curCat) catSel.value = curCat;
+}
+function getFilteredHistory() {
+  const monthVal = document.getElementById('filter-month').value;
+  const typeVal = document.getElementById('filter-type').value;
+  const catVal = document.getElementById('filter-cat').value;
+  const searchVal = document.getElementById('filter-search').value.toLowerCase();
+  return entries.filter(e => {
+    if (monthVal && !e.date.startsWith(monthVal)) return false;
+    if (typeVal && e.type !== typeVal) return false;
+    if (catVal && e.category !== catVal) return false;
+    if (searchVal && !(e.desc+e.note+e.category).toLowerCase().includes(searchVal)) return false;
+    return true;
+  }).sort((a,b) => b.date.localeCompare(a.date) || (b.createdAt||'').localeCompare(a.createdAt||''));
+}
+function clearHistoryFilter() {
+  document.getElementById('filter-month').value = '';
+  document.getElementById('filter-type').value = '';
+  document.getElementById('filter-cat').value = '';
+  document.getElementById('filter-search').value = '';
+  renderHistory();
+}
+function renderMonthStats() {
+  const filtered = getFilteredHistory();
+  const monthVal = document.getElementById('filter-month').value;
+  const income = filtered.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+  const expense = filtered.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  const profit = income - expense;
+  let periodLabel = 'ทั้งหมด';
+  if (monthVal) {
+    const [y, mo] = monthVal.split('-');
+    periodLabel = `${MONTHS[parseInt(mo)-1]} ${parseInt(y)+543}`;
+  }
+  document.getElementById('lbl-income-month').textContent = `รายรับ (${periodLabel})`;
+  document.getElementById('lbl-expense-month').textContent = `รายจ่าย (${periodLabel})`;
+  document.getElementById('lbl-profit-month').textContent = `คงเหลือ (${periodLabel})`;
+  document.getElementById('st-income-month').textContent = fmtI(income);
+  document.getElementById('st-expense-month').textContent = fmtI(expense);
+  const pEl = document.getElementById('st-profit-month');
+  pEl.textContent = fmtI(profit);
+  pEl.className = 'stat-val ' + (profit >= 0 ? 'gold' : 'red');
+  document.getElementById('st-count-month').textContent = filtered.length;
+}
+function renderHistory() {
+  renderMonthStats();
+  const filtered = getFilteredHistory();
+  const wrap = document.getElementById('history-table');
+  if (filtered.length === 0) {
+    wrap.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div>ไม่พบรายการ</div></div>`;
+    return;
+  }
+  wrap.innerHTML = renderEntryTable(filtered, true);
+}
+
+// ══════════════════════════════════════════
+//  SHARED TABLE RENDERER
+// ══════════════════════════════════════════
+const PAY_LABEL = { cash:'💵 เงินสด', transfer:'📲 โอน', other:'อื่นๆ' };
+function renderEntryTable(list, showDate=true) {
+  const rows = list.map(e => {
+    const d = new Date(e.date+'T00:00:00').toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    return `<tr>
+      ${showDate ? `<td class="mono" style="color:var(--ink3);font-size:0.82rem;">${d}</td>` : ''}
+      <td><span class="type-dot ${e.type}"></span><span style="font-size:0.82rem;color:var(--ink3);">${e.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
+      <td><span class="cat-badge ${e.type}">${e.category}</span></td>
+      <td style="max-width:200px;">${e.desc||'<span style="color:#bbb;">—</span>'}</td>
+      <td style="font-size:0.82rem;color:var(--ink3);max-width:150px;">${e.note||''}</td>
+      <td style="font-size:0.8rem;color:var(--ink3);">${PAY_LABEL[e.payment]||e.payment}</td>
+      <td style="text-align:right;" class="${e.type==='income'?'amt-income':'amt-expense'}">${e.type==='income'?'+':'-'}${fmtN(e.amount)}</td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button class="btn btn-ghost btn-sm" onclick="editEntry('${e.id}')" style="padding:4px 9px;margin-right:4px;">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteEntry('${e.id}')" style="padding:4px 9px;color:var(--red);">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+  return `<table class="ledger-table">
+    <thead><tr>
+      ${showDate ? '<th>วันที่</th>' : ''}
+      <th>ประเภท</th><th>หมวดหมู่</th><th>รายละเอียด</th><th>หมายเหตุ</th><th>ชำระ</th>
+      <th style="text-align:right;">จำนวน (บาท)</th><th style="text-align:center;">จัดการ</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ══════════════════════════════════════════
+//  TAX SUMMARY
+// ══════════════════════════════════════════
+function initTaxYear() {
+  const years = [...new Set(entries.map(e => parseInt(e.date.slice(0,4))))].sort((a,b)=>b-a);
+  const cy = new Date().getFullYear();
+  if (!years.includes(cy)) years.unshift(cy);
+  const sel = document.getElementById('tax-year');
+  sel.innerHTML = years.map(y => `<option value="${y}">${y+543}</option>`).join('');
+}
+function renderTax() {
+  const sel = document.getElementById('tax-year');
+  if (!sel) return;
+  const year = parseInt(sel.value);
+
+  const yearEntries = entries.filter(e => parseInt(e.date.slice(0,4)) === year);
+
+  // Monthly breakdown
+  const monthlyInc = Array(12).fill(0);
+  const monthlyExp = Array(12).fill(0);
+  yearEntries.forEach(e => {
+    const m = parseInt(e.date.slice(5,7)) - 1;
+    if (e.type === 'income') monthlyInc[m] += e.amount;
+    else monthlyExp[m] += e.amount;
+  });
+
+  const totalInc = monthlyInc.reduce((s,v)=>s+v,0);
+  const totalExp = monthlyExp.reduce((s,v)=>s+v,0);
+  const netProfit = totalInc - totalExp;
+
+  // Deductions
+  const ded = {
+    self: parseFloat(document.getElementById('ded-self').value)||0,
+    spouse: parseFloat(document.getElementById('ded-spouse').value)||0,
+    child: (parseFloat(document.getElementById('ded-child').value)||0)*30000,
+    ssf: parseFloat(document.getElementById('ded-ssf').value)||0,
+    ins: parseFloat(document.getElementById('ded-ins').value)||0,
+    rmf: parseFloat(document.getElementById('ded-rmf').value)||0,
+  };
+  const totalDed = Object.values(ded).reduce((s,v)=>s+v,0);
+  const taxable = Math.max(0, netProfit - totalDed);
+
+  function calcTax(n) {
+    if (n <= 150000) return 0;
+    if (n <= 300000) return (n-150000)*0.05;
+    if (n <= 500000) return 150000*0.05+(n-300000)*0.10;
+    if (n <= 750000) return 150000*0.05+200000*0.10+(n-500000)*0.15;
+    if (n <= 1000000) return 150000*0.05+200000*0.10+250000*0.15+(n-750000)*0.20;
+    return 150000*0.05+200000*0.10+250000*0.15+250000*0.20+(n-1000000)*0.25;
+  }
+  const tax = calcTax(taxable);
+
+  function bracketLabel(n) {
+    if (n<=150000) return 'ยกเว้น';
+    if (n<=300000) return '5%';
+    if (n<=500000) return '5–10%';
+    if (n<=750000) return '5–15%';
+    if (n<=1000000) return '5–20%';
+    return '5–25%';
+  }
+
+  // Render monthly table
+  let bodyRows = '';
+  let hasData = false;
+  for (let m=0; m<12; m++) {
+    const inc = monthlyInc[m], exp = monthlyExp[m], profit = inc-exp;
+    if (inc===0 && exp===0) continue;
+    hasData = true;
+    bodyRows += `<tr>
+      <td>${MONTHS[m]}</td>
+      <td style="text-align:right;color:var(--green);font-family:'IBM Plex Mono',monospace;">${fmtI(inc)}</td>
+      <td style="text-align:right;color:var(--red);font-family:'IBM Plex Mono',monospace;">${fmtI(exp)}</td>
+      <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;color:${profit>=0?'var(--green)':'var(--red)'};">${fmtI(profit)}</td>
+    </tr>`;
+  }
+  if (!hasData) bodyRows = `<tr><td colspan="4" style="text-align:center;color:var(--ink3);padding:28px;">ไม่มีข้อมูลในปี ${year+543}</td></tr>`;
+  document.getElementById('tax-month-body').innerHTML = bodyRows;
+  document.getElementById('tax-month-foot').innerHTML = `<tr>
+    <td><b>รวมทั้งปี</b></td>
+    <td style="text-align:right;color:var(--green);font-family:'IBM Plex Mono',monospace;"><b>${fmtI(totalInc)}</b></td>
+    <td style="text-align:right;color:var(--red);font-family:'IBM Plex Mono',monospace;"><b>${fmtI(totalExp)}</b></td>
+    <td style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${netProfit>=0?'var(--green)':'var(--red)'};">${fmtI(netProfit)}</td>
+  </tr>`;
+
+  // Render calc
+  const calcItems = [
+    { label:'📥 รายได้รวม (รายรับ)', val: '+'+fmtN(totalInc), cls:'income-row' },
+    { label:'📤 รายจ่ายตามจริง (จากบันทึก)', val: '−'+fmtN(totalExp), cls:'expense-row' },
+    { label:'💰 กำไรสุทธิ', val: fmtN(netProfit), cls:'profit-row', mono:true },
+    { label:'🧾 รวมค่าลดหย่อน', val: '−'+fmtN(totalDed), cls:'deduct-row' },
+    { label:`📐 เงินได้สุทธิ (ฐานภาษี)`, val: fmtN(taxable)+'<span class="bracket-tag">'+bracketLabel(taxable)+'</span>', cls:'' },
+    { label:'✅ ภาษีที่ต้องชำระ (ประมาณ)', val: fmtN(tax)+' บาท', cls:'total' },
+  ];
+  document.getElementById('tax-calc-rows').innerHTML = calcItems.map(r =>
+    `<div class="tax-calc-row ${r.cls}">
+      <span>${r.label}</span>
+      <span class="val">${r.val}</span>
+    </div>`
+  ).join('');
+
+  // Category breakdown for expenses
+  const expByCat = {};
+  yearEntries.filter(e=>e.type==='expense').forEach(e => {
+    expByCat[e.category] = (expByCat[e.category]||0) + e.amount;
+  });
+  const sorted = Object.entries(expByCat).sort((a,b)=>b[1]-a[1]);
+  if (sorted.length === 0) {
+    document.getElementById('tax-cat-breakdown').innerHTML = `<div style="color:var(--ink3);text-align:center;padding:24px;">ยังไม่มีรายจ่ายในปี ${year+543}</div>`;
+  } else {
+    const max = sorted[0][1];
+    document.getElementById('tax-cat-breakdown').innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">` +
+      sorted.map(([cat, amt]) => {
+        const pct = max > 0 ? (amt/max*100) : 0;
+        const totalPct = totalExp > 0 ? (amt/totalExp*100).toFixed(1) : 0;
+        return `<div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:130px;font-size:0.84rem;font-weight:600;color:var(--ink3);text-align:right;flex-shrink:0;">${cat}</div>
+          <div style="flex:1;height:10px;background:var(--paper2);border-radius:6px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:var(--red);border-radius:6px;transition:width 0.4s;"></div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.83rem;color:var(--red);font-weight:600;width:90px;text-align:right;">${fmtI(amt)}</div>
+          <div style="font-size:0.78rem;color:var(--ink3);width:40px;">${totalPct}%</div>
+        </div>`;
+      }).join('') + `</div>`;
+  }
+}
+
+function printTax() {
+  const year = parseInt(document.getElementById('tax-year').value);
+  const monthTbl = document.getElementById('tax-month-table').outerHTML;
+  const calcTbl = document.getElementById('tax-calc-rows').innerHTML;
+  const now = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const win = window.open('','_blank','width=860,height=680');
+  win.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+      body{font-family:'Noto Sans Thai',sans-serif;padding:20mm 18mm;color:#0f1923;font-size:10pt;}
+      h1{font-size:14pt;margin-bottom:4px;}
+      .sub{color:#666;font-size:9pt;margin-bottom:16px;}
+      table{border-collapse:collapse;width:100%;margin-bottom:16px;}
+      th{background:#0f1923;color:white;padding:7px 12px;font-size:8.5pt;}
+      td{padding:7px 12px;border-bottom:1px solid #ddd;font-size:9pt;}
+      tfoot td{font-weight:700;border-top:2px solid #0f1923;background:#f5f0e8;}
+      .tax-calc-row{display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #e8e0d5;}
+      .tax-calc-row.total{background:#0f1923;color:white;border-radius:6px;margin-top:4px;font-weight:700;}
+      .tax-calc-row.profit-row{background:#f5f0e8;font-weight:700;}
+      .val{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+      @media print{body{padding:8mm;}}
+    </style></head><body>
+    <h1>🧾 สรุปยื่นภาษี ปี พ.ศ. ${year+543}</h1>
+    <div class="sub">พิมพ์เมื่อ ${now} | บัญชีรายรับ-รายจ่ายส่วนตัว</div>
+    ${monthTbl}
+    <h3 style="margin-bottom:10px;">คำนวณภาษีเบื้องต้น</h3>
+    <div>${calcTbl}</div>
+  </body></html>`);
+  win.document.close();
+  setTimeout(()=>{win.focus();win.print();},700);
+}
+
+// ══════════════════════════════════════════
+//  GOOGLE SHEETS SYNC
+// ══════════════════════════════════════════
+function getSheetUrl() {
+  return localStorage.getItem('personal_acc_sheet_url') || '';
+}
+function saveSheetUrl() {
+  const url = document.getElementById('sheet-url-input').value.trim();
+  localStorage.setItem('personal_acc_sheet_url', url);
+  updateSyncUI();
+  toast('💾 บันทึก URL แล้ว');
+}
+function updateSyncUI() {
+  const url = getSheetUrl();
+  const btn = document.getElementById('sync-btn');
+  const status = document.getElementById('sync-status');
+  if (url) {
+    btn.style.display = 'inline-flex';
+    status.style.display = 'flex';
+  } else {
+    btn.style.display = 'none';
+    status.style.display = 'none';
+  }
+  const inp = document.getElementById('sheet-url-input');
+  if (inp) inp.value = url;
+  const lastSync = localStorage.getItem('personal_acc_last_sync');
+  const info = document.getElementById('last-sync-info');
+  if (info && lastSync) {
+    const d = new Date(lastSync).toLocaleString('th-TH');
+    info.textContent = `ซิงก์ล่าสุด: ${d}`;
+  }
+}
+async function testSheetUrl() {
+  const url = document.getElementById('sheet-url-input').value.trim();
+  if (!url) { toast('⚠️ กรุณากรอก URL ก่อน'); return; }
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.status === 'ok') toast('✅ เชื่อมต่อได้!');
+    else toast('⚠️ ตอบกลับแต่ผิดปกติ: ' + (json.message||''));
+  } catch(e) {
+    toast('❌ เชื่อมต่อไม่ได้ — ตรวจสอบ URL และ Deploy อีกครั้ง');
+  }
+}
+async function syncToSheet() {
+  const url = getSheetUrl();
+  if (!url) {
+    toast('⚠️ ยังไม่ได้ตั้งค่า URL — ไปที่แท็บ ⚙️ ตั้งค่า');
+    showTab('settings');
+    return;
+  }
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  const btn = document.getElementById('sync-btn');
+  dot.style.background = '#facc15';
+  txt.textContent = 'กำลังซิงก์...';
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังอัป...';
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'sync', entries: entries }),
+    });
+    const json = await res.json();
+    if (json.status === 'ok') {
+      dot.style.background = '#4ade80';
+      txt.textContent = `ซิงก์แล้ว +${json.added} /${json.updated} อัป`;
+      localStorage.setItem('personal_acc_last_sync', new Date().toISOString());
+      updateSyncUI();
+      toast(`✅ อัปขึ้น Sheet สำเร็จ — เพิ่ม ${json.added} รายการ, อัปเดต ${json.updated} รายการ`, 3500);
+      setTimeout(() => { txt.textContent = 'ซิงก์แล้ว'; }, 4000);
+    } else {
+      throw new Error(json.message || 'error');
+    }
+  } catch(e) {
+    dot.style.background = '#f87171';
+    txt.textContent = 'ซิงก์ไม่สำเร็จ';
+    toast('❌ ซิงก์ไม่สำเร็จ — ' + e.message, 4000);
+    setTimeout(() => { dot.style.background = '#4ade80'; txt.textContent = 'พร้อมซิงก์'; }, 5000);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '☁️ อัปขึ้น Sheet';
+  }
+}
+function exportBackup() {
+  const data = { entries, exportDate: new Date().toISOString(), version: 1 };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `personal_acc_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('💾 Backup สำเร็จ');
+}
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.entries || !Array.isArray(data.entries)) { toast('❌ ไฟล์ไม่ถูกต้อง'); return; }
+      const localIds = new Set(entries.map(x => x.id));
+      let added = 0;
+      data.entries.forEach(x => { if (x.id && !localIds.has(x.id)) { entries.push(x); added++; } });
+      saveData();
+      renderTodayStats(); renderTodayEntries();
+      initHistoryFilter(); renderHistory();
+      toast(`📂 นำเข้าสำเร็จ — เพิ่ม ${added} รายการ`, 3000);
+    } catch(err) { toast('❌ อ่านไฟล์ไม่ได้'); }
+  };
+  reader.readAsText(file);
+}
+function copyScript() {
+  const el = document.getElementById('apps-script-code');
+  navigator.clipboard.writeText(el.value).then(() => toast('📋 คัดลอกโค้ดแล้ว'));
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+(function init() {
+  loadData();
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('entry-date').value = today;
+  document.getElementById('entry-date').onchange = function() { renderTodayStats(); renderTodayEntries(); };
+  setType('income');
+  renderTodayStats();
+  renderTodayEntries();
+  initHistoryFilter();
+  updateSyncUI();
+
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  // PWA Install prompt (Android Chrome)
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const bar = document.getElementById('install-bar');
+    if (bar) bar.style.display = 'flex';
+  });
+  window.addEventListener('appinstalled', () => {
+    const bar = document.getElementById('install-bar');
+    if (bar) bar.style.display = 'none';
+    deferredPrompt = null;
+    toast('🎉 ติดตั้งแอปสำเร็จแล้ว!');
+  });
+  window._installPWA = async function() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') toast('🎉 กำลังติดตั้ง...');
+    deferredPrompt = null;
+    const bar = document.getElementById('install-bar');
+    if (bar) bar.style.display = 'none';
+  };
+})();
+</script>
+
+<!-- PWA Install Banner -->
+<div id="install-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#0f1923;color:#f5f0e8;padding:12px 20px;align-items:center;justify-content:space-between;gap:12px;z-index:9999;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-size:1.4rem;">📱</span>
+    <div>
+      <div style="font-weight:700;font-size:0.9rem;">ติดตั้งเป็นแอปมือถือ</div>
+      <div style="font-size:0.76rem;opacity:0.6;">ใช้งานได้เหมือนแอปจริง ไม่ต้องเปิดเบราว์เซอร์</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="document.getElementById('install-bar').style.display='none'" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;padding:7px 14px;border-radius:7px;cursor:pointer;font-size:0.83rem;">ภายหลัง</button>
+    <button onclick="window._installPWA()" style="background:#c94a1a;border:none;color:white;padding:7px 18px;border-radius:7px;cursor:pointer;font-weight:700;font-size:0.83rem;">ติดตั้ง</button>
+  </div>
+</div>
+
+</body>
+</html>
